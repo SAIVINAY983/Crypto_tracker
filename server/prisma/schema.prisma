@@ -6,12 +6,12 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
 }
 
 model PortfolioItem {
-  id           String        @id @default(uuid())
+  id           String        @id @default(auto()) @map("_id") @db.ObjectId
   userId       String        // MongoDB user ID from JWT
   cryptoId     String        // e.g., 'bitcoin', 'ethereum'
   symbol       String        // e.g., 'BTC', 'ETH'
@@ -22,8 +22,8 @@ model PortfolioItem {
 }
 
 model Transaction {
-  id                 String        @id @default(uuid())
-  portfolioItemId    String
+  id                 String        @id @default(auto()) @map("_id") @db.ObjectId
+  portfolioItemId    String        @db.ObjectId
   portfolioItem      PortfolioItem @relation(fields: [portfolioItemId], references: [id], onDelete: Cascade)
   type               String        // 'BUY' or 'SELL'
   amount             Float
@@ -32,7 +32,7 @@ model Transaction {
 }
 
 model PaperAccount {
-  id          String   @id @default(uuid())
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
   userId      String   @unique // one account per user
   cashBalance Float    @default(100000.0)
   createdAt   DateTime @default(now())
@@ -40,14 +40,14 @@ model PaperAccount {
 }
 
 model PortfolioSnapshot {
-  id         String   @id @default(uuid())
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
   userId     String
   totalValue Float
   timestamp  DateTime @default(now())
 }
 
 model WatchlistItem {
-  id        String   @id @default(uuid())
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
   userId    String
   cryptoId  String
   addedAt   DateTime @default(now())
@@ -56,7 +56,7 @@ model WatchlistItem {
 }
 
 model PriceAlert {
-  id          String   @id @default(uuid())
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
   userId      String
   cryptoId    String
   symbol      String
