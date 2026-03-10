@@ -3,7 +3,7 @@ services:
     name: crypto-pal-oracle-pro
     env: node
     plan: free
-    buildCommand: npm install --include=dev && npm run build && cd server && npm install && npx prisma generate && npm run build
+    buildCommand: npm install --include=dev && npm run build && cd server && npm uninstall -g esbuild && npm uninstall esbuild && rm -rf node_modules package-lock.json && npm install && npx prisma generate && npm run build
     startCommand: cd server && npm start
     envVars:
       - key: PORT
