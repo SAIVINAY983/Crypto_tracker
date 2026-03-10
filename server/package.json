@@ -31,8 +31,6 @@
     "@types/node-fetch": "^2.6.11",
     "@types/sentiment": "^5.0.4",
     "prisma": "^5.22.0",
-    "ts-node": "^10.9.2",
-    "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   }
 }
