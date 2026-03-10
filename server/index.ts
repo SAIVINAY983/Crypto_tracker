@@ -7,16 +7,10 @@ import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
 import authRoutes from './routes/auth';
 import path from 'path';
-import { fileURLToPath } from 'url';
-
 const prisma = new PrismaClient();
 const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET: string = process.env.JWT_SECRET || 'fallback_secret_for_dev';
-
-// Setup __dirname for ES Modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 // ─── Auth Middleware ────────────────────────────────────────────────────────
 interface AuthRequest extends Request { userId?: string; }

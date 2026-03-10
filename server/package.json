@@ -2,7 +2,6 @@
   "name": "server",
   "version": "1.0.0",
   "description": "",
-  "type": "module",
   "main": "index.js",
   "scripts": {
     "dev": "tsx watch index.ts",
@@ -23,9 +22,7 @@
     "mongoose": "^9.2.4",
     "node-fetch": "^2.7.0",
     "nodemailer": "^8.0.2",
-    "sentiment": "^5.0.2"
-  },
-  "devDependencies": {
+    "sentiment": "^5.0.2",
     "@types/bcryptjs": "^2.4.6",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
