@@ -39,7 +39,7 @@ app.use(cors());
 app.use(express.json());
 
 // Connect to MongoDB for Authentication
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/crypto-pal';
+const MONGO_URI = process.env.MONGO_URI || process.env.DATABASE_URL || 'mongodb://127.0.0.1:27017/crypto-pal';
 mongoose.connect(MONGO_URI)
     .then(() => console.log('✅ Connected to MongoDB (Auth DB)'))
     .catch((err) => console.error('❌ MongoDB Connection Error:', err));

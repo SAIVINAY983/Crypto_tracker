@@ -75,7 +75,7 @@ const PortfolioTracker: React.FC<PortfolioTrackerProps> = ({ cryptocurrencies })
     // Record a snapshot of the net worth automatically on value load
     if (cashBalance !== null && (totalValue > 0 || cashBalance >= 0)) {
       const netWorth = cashBalance + totalValue;
-      fetch('http://127.0.0.1:3000/api/portfolio/snapshot', {
+      fetch(`${API_BASE_URL}/portfolio/snapshot`, {
         method: 'POST',
         headers: authHeaders,
         body: JSON.stringify({ totalValue: netWorth })
@@ -93,7 +93,7 @@ const PortfolioTracker: React.FC<PortfolioTrackerProps> = ({ cryptocurrencies })
 
     try {
       // Add entry to backend
-      const response = await fetch('http://127.0.0.1:3000/api/portfolio/buy', {
+      const response = await fetch(`${API_BASE_URL}/portfolio/buy`, {
         method: 'POST',
         headers: authHeaders,
         body: JSON.stringify({
@@ -109,7 +109,7 @@ const PortfolioTracker: React.FC<PortfolioTrackerProps> = ({ cryptocurrencies })
       }
 
       // Re-fetch portfolio to get the updated aggregated data
-      const refreshResponse = await fetch('http://127.0.0.1:3000/api/portfolio', {
+      const refreshResponse = await fetch(`${API_BASE_URL}/portfolio`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (refreshResponse.ok) {
@@ -145,7 +145,7 @@ const PortfolioTracker: React.FC<PortfolioTrackerProps> = ({ cryptocurrencies })
     if (!crypto) return;
 
     try {
-      const response = await fetch('http://127.0.0.1:3000/api/portfolio/sell', {
+      const response = await fetch(`${API_BASE_URL}/portfolio/sell`, {
         method: 'POST',
         headers: authHeaders,
         body: JSON.stringify({
@@ -161,7 +161,7 @@ const PortfolioTracker: React.FC<PortfolioTrackerProps> = ({ cryptocurrencies })
       }
 
       // Re-fetch portfolio
-      const refreshResponse = await fetch('http://127.0.0.1:3000/api/portfolio', {
+      const refreshResponse = await fetch(`${API_BASE_URL}/portfolio`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (refreshResponse.ok) {

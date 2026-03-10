@@ -15,7 +15,7 @@ const CoinWatchlist: React.FC<WatchlistProps> = ({ cryptos }) => {
 
     useEffect(() => {
         if (!token) return;
-        fetch('http://127.0.0.1:3000/api/watchlist', {
+        fetch(`${API_BASE_URL}/watchlist`, {
             headers: { 'Authorization': `Bearer ${token}` }
         })
             .then(r => r.json())
@@ -25,7 +25,7 @@ const CoinWatchlist: React.FC<WatchlistProps> = ({ cryptos }) => {
 
     const remove = async (cryptoId: string) => {
         if (!token) return;
-        await fetch(`http://127.0.0.1:3000/api/watchlist/${cryptoId}`, {
+        await fetch(`${API_BASE_URL}/watchlist/${cryptoId}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -82,7 +82,7 @@ const StarToggle = ({ id }: { id: string }) => {
 
     useEffect(() => {
         if (!token) return;
-        fetch('http://127.0.0.1:3000/api/watchlist', {
+        fetch(`${API_BASE_URL}/watchlist`, {
             headers: { 'Authorization': `Bearer ${token}` }
         })
             .then(r => r.json())
