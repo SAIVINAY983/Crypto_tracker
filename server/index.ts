@@ -6,11 +6,19 @@ import fetch from 'node-fetch';
 import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
 import authRoutes from './routes/auth';
+import path from 'path';
+// import { fileURLToPath } from 'url'; // This import is no longer needed
+
+// const __filename = fileURLToPath(import.meta.url); // This line is removed
+// const __dirname = path.dirname(__filename); // This line is removed
 
 const prisma = new PrismaClient();
 const app = express();
 const PORT = process.env.PORT || 3000;
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_for_dev';
+const JWT_SECRET = (process.env.JWT_SECRET as string) || 'fallback_secret_for_dev';
+
+// Setup __dirname for ES Modules
+const __dirname = path.resolve();
 
 // ─── Auth Middleware ────────────────────────────────────────────────────────
 interface AuthRequest extends Request { userId?: string; }
@@ -22,7 +30,7 @@ const verifyToken = (req: AuthRequest, res: Response, next: NextFunction) => {
     }
     const token = authHeader.split(' ')[1];
     try {
-        const decoded: any = jwt.verify(token, JWT_SECRET);
+        const decoded = jwt.verify(token, JWT_SECRET) as any;
         req.userId = decoded.id;
         next();
     } catch {
@@ -43,6 +51,18 @@ mongoose.connect(MONGO_URI)
 
 // Register Auth Routes
 app.use('/api/auth', authRoutes);
+
+// Serve static files from the React app
+const frontendDistPath = path.join(__dirname, '../dist');
+app.use(express.static(frontendDistPath));
+
+// Handle React routing, return all requests to React app
+app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api')) {
+        return next();
+    }
+    res.sendFile(path.join(frontendDistPath, 'index.html'));
+});
 
 let cryptoCache: any = null;
 let lastFetchTime = 0;

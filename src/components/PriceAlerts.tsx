@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { API_BASE_URL } from '../utils/apiConfig';
 import { Cryptocurrency } from '../utils/cryptoApi';
 import { Bell, Trash2, Plus, AlertCircle } from 'lucide-react';
 
@@ -27,7 +28,7 @@ const PriceAlerts: React.FC<PriceAlertsProps> = ({ cryptos }) => {
 
     useEffect(() => {
         if (!token) return;
-        fetch('http://127.0.0.1:3000/api/alerts', {
+        fetch(`${API_BASE_URL}/api/alerts`, {
             headers: { 'Authorization': `Bearer ${token}` }
         })
             .then(res => res.json())
@@ -43,7 +44,7 @@ const PriceAlerts: React.FC<PriceAlertsProps> = ({ cryptos }) => {
         const crypto = cryptos.find(c => c.id === selectedCryptoId);
 
         try {
-            const response = await fetch('http://127.0.0.1:3000/api/alerts', {
+            const response = await fetch(`${API_BASE_URL}/api/alerts`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -72,7 +73,7 @@ const PriceAlerts: React.FC<PriceAlertsProps> = ({ cryptos }) => {
 
     const handleDeleteAlert = async (id: string) => {
         try {
-            const response = await fetch(`http://127.0.0.1:3000/api/alerts/${id}`, {
+            const response = await fetch(`${API_BASE_URL}/api/alerts/${id}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import { API_BASE_URL } from '../utils/apiConfig';
 
 const ResetPassword = () => {
     const { token } = useParams();
@@ -27,7 +28,7 @@ const ResetPassword = () => {
         setLoading(true);
 
         try {
-            const res = await fetch(`http://127.0.0.1:3000/api/auth/reset-password/${token}`, {
+            const res = await fetch(`${API_BASE_URL}/api/auth/reset-password/${token}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ password })

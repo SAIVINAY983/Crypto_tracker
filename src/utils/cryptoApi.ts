@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from 'react';
+import { API_BASE_URL } from './apiConfig';
 
 export interface Cryptocurrency {
   id: string;
@@ -138,7 +139,7 @@ export const useCryptoPrices = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const response = await fetch('http://127.0.0.1:3000/api/cryptos');
+        const response = await fetch(`${API_BASE_URL}/api/cryptos`);
         if (!response.ok) {
           throw new Error(`Failed to fetch cryptos: ${response.statusText}`);
         }
@@ -188,7 +189,7 @@ export const useCryptoNews = () => {
     const fetchNews = async () => {
       setLoading(true);
       try {
-        const response = await fetch('http://127.0.0.1:3000/api/news');
+        const response = await fetch(`${API_BASE_URL}/api/news`);
         if (!response.ok) {
           throw new Error(`Failed to fetch news: ${response.statusText}`);
         }

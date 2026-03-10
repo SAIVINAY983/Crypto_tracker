@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Cryptocurrency } from '../utils/cryptoApi';
+import { API_BASE_URL } from '../utils/apiConfig';
 import { Star, StarOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -92,12 +93,12 @@ const StarToggle = ({ id }: { id: string }) => {
     const toggle = async () => {
         if (!token) return;
         if (watched) {
-            await fetch(`http://127.0.0.1:3000/api/watchlist/${id}`, {
+            await fetch(`${API_BASE_URL}/api/watchlist/${id}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
         } else {
-            await fetch('http://127.0.0.1:3000/api/watchlist', {
+            const res = await fetch(`${API_BASE_URL}/api/watchlist`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ cryptoId: id })

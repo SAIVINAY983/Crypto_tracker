@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Cryptocurrency } from '../utils/cryptoApi';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { TransactionHistory } from './TransactionHistory';
+import { API_BASE_URL } from '../utils/apiConfig';
 import { useAuth } from '../context/AuthContext';
 import CryptoSparkline from './CryptoSparkline';
 
@@ -40,7 +41,7 @@ const PortfolioTracker: React.FC<PortfolioTrackerProps> = ({ cryptocurrencies })
     // Fetch initial portfolio from backend
     const fetchPortfolio = async () => {
       try {
-        const response = await fetch('http://127.0.0.1:3000/api/portfolio', {
+        const response = await fetch(`${API_BASE_URL}/api/portfolio`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (response.ok) {

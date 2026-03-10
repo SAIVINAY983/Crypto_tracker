@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { API_BASE_URL } from '../utils/apiConfig';
 import { useAuth } from '../context/AuthContext';
 
 interface Snapshot {
@@ -16,7 +17,7 @@ const PortfolioHistoryChart = () => {
     useEffect(() => {
         const fetchHistory = async () => {
             try {
-                const res = await fetch('http://127.0.0.1:3000/api/portfolio/history', {
+                const res = await fetch(`${API_BASE_URL}/api/portfolio/history`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (res.ok) {
