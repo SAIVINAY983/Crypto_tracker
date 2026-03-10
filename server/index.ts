@@ -15,7 +15,7 @@ import path from 'path';
 const prisma = new PrismaClient();
 const app = express();
 const PORT = process.env.PORT || 3000;
-const JWT_SECRET = (process.env.JWT_SECRET as string) || 'fallback_secret_for_dev';
+const JWT_SECRET: string = process.env.JWT_SECRET || 'fallback_secret_for_dev';
 
 // Setup __dirname for ES Modules
 const __dirname = path.resolve();
@@ -30,7 +30,7 @@ const verifyToken = (req: AuthRequest, res: Response, next: NextFunction) => {
     }
     const token = authHeader.split(' ')[1];
     try {
-        const decoded = jwt.verify(token, JWT_SECRET) as any;
+        const decoded = jwt.verify(token, JWT_SECRET as string) as any;
         req.userId = decoded.id;
         next();
     } catch {
