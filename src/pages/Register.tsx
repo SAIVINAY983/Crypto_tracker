@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import Header from '../components/Header';
 import { Mail, Lock, Phone, Loader2, Eye, EyeOff } from 'lucide-react';
+import { API_BASE_URL } from '../utils/apiConfig';
 
 const registerSchema = z.object({
     email: z
@@ -48,7 +49,7 @@ const Register = () => {
     const onSubmit = async (data: RegisterFormValues) => {
         setIsLoading(true);
         try {
-            const response = await fetch('http://localhost:3000/api/auth/register', {
+            const response = await fetch(`${API_BASE_URL}/auth/register`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email: data.email, phone: data.phone, password: data.password })
