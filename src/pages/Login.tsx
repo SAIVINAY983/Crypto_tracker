@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import Header from '../components/Header';
 import { Mail, Lock, Loader2, Eye, EyeOff } from 'lucide-react';
+import { API_BASE_URL } from '../utils/apiConfig';
 
 const loginSchema = z.object({
     email: z
@@ -39,8 +40,6 @@ const Login = () => {
 
     // Extra client-side safety guard
     const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-
-import { API_BASE_URL } from '../utils/apiConfig';
 
     const onSubmit = async (data: LoginFormValues) => {
         // Hard guard: reject bad email even if Zod somehow passed it
