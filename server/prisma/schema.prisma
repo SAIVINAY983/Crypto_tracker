@@ -1,0 +1,67 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model PortfolioItem {
+  id           String        @id @default(uuid())
+  userId       String        // MongoDB user ID from JWT
+  cryptoId     String        // e.g., 'bitcoin', 'ethereum'
+  symbol       String        // e.g., 'BTC', 'ETH'
+  amount       Float
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  transactions Transaction[]
+}
+
+model Transaction {
+  id                 String        @id @default(uuid())
+  portfolioItemId    String
+  portfolioItem      PortfolioItem @relation(fields: [portfolioItemId], references: [id], onDelete: Cascade)
+  type               String        // 'BUY' or 'SELL'
+  amount             Float
+  priceAtTransaction Float
+  createdAt          DateTime      @default(now())
+}
+
+model PaperAccount {
+  id          String   @id @default(uuid())
+  userId      String   @unique // one account per user
+  cashBalance Float    @default(100000.0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model PortfolioSnapshot {
+  id         String   @id @default(uuid())
+  userId     String
+  totalValue Float
+  timestamp  DateTime @default(now())
+}
+
+model WatchlistItem {
+  id        String   @id @default(uuid())
+  userId    String
+  cryptoId  String
+  addedAt   DateTime @default(now())
+
+  @@unique([userId, cryptoId])  // prevent duplicates
+}
+
+model PriceAlert {
+  id          String   @id @default(uuid())
+  userId      String
+  cryptoId    String
+  symbol      String
+  targetPrice Float
+  direction   String   // 'ABOVE' or 'BELOW'
+  triggered   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}

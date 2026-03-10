@@ -10,6 +10,9 @@ export interface Cryptocurrency {
   price_change_percentage_24h: number;
   market_cap: number;
   total_volume: number;
+  sparkline_in_7d?: {
+    price: number[];
+  };
 }
 
 export interface CryptoNews {
@@ -19,9 +22,19 @@ export interface CryptoNews {
   imageUrl: string;
   source: string;
   publishedAt: string;
+  sentiment?: 'BULLISH' | 'BEARISH' | 'NEUTRAL';
+  sentimentScore?: number;
 }
 
 // Mock data while we don't have real API integration
+const generateSparkline = (base: number, volatility: number) => {
+  let current = base;
+  return Array.from({ length: 168 }, () => {
+    current = current + (Math.random() - 0.5) * volatility;
+    return current;
+  });
+};
+
 const mockCryptos: Cryptocurrency[] = [
   {
     id: "bitcoin",
@@ -31,7 +44,8 @@ const mockCryptos: Cryptocurrency[] = [
     current_price: 63589.42,
     price_change_percentage_24h: 2.45,
     market_cap: 1245678987654,
-    total_volume: 32456789876
+    total_volume: 32456789876,
+    sparkline_in_7d: { price: generateSparkline(60000, 1000) }
   },
   {
     id: "ethereum",
@@ -41,7 +55,8 @@ const mockCryptos: Cryptocurrency[] = [
     current_price: 3045.67,
     price_change_percentage_24h: -1.23,
     market_cap: 367890987654,
-    total_volume: 19876543210
+    total_volume: 19876543210,
+    sparkline_in_7d: { price: generateSparkline(3000, 50) }
   },
   {
     id: "ripple",
@@ -51,7 +66,8 @@ const mockCryptos: Cryptocurrency[] = [
     current_price: 0.58,
     price_change_percentage_24h: 0.34,
     market_cap: 31245678987,
-    total_volume: 1523456789
+    total_volume: 1523456789,
+    sparkline_in_7d: { price: generateSparkline(0.5, 0.01) }
   },
   {
     id: "cardano",
@@ -61,7 +77,8 @@ const mockCryptos: Cryptocurrency[] = [
     current_price: 0.46,
     price_change_percentage_24h: -2.56,
     market_cap: 16234567898,
-    total_volume: 543234567
+    total_volume: 543234567,
+    sparkline_in_7d: { price: generateSparkline(0.5, 0.01) }
   },
   {
     id: "solana",
@@ -71,7 +88,8 @@ const mockCryptos: Cryptocurrency[] = [
     current_price: 125.78,
     price_change_percentage_24h: 4.89,
     market_cap: 54321987654,
-    total_volume: 6543219876
+    total_volume: 6543219876,
+    sparkline_in_7d: { price: generateSparkline(120, 2) }
   }
 ];
 
@@ -120,15 +138,26 @@ export const useCryptoPrices = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // In a real app, this would fetch from an API
-        // const response = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=20&page=1');
-        // const data = await response.json();
-        
-        // Simulate loading
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Use mock data
-        setCryptos(mockCryptos);
+        const response = await fetch('http://127.0.0.1:3000/api/cryptos');
+        if (!response.ok) {
+          throw new Error(`Failed to fetch cryptos: ${response.statusText}`);
+        }
+        const data = await response.json();
+
+        // Map the data to only include the fields we need
+        const mappedData: Cryptocurrency[] = data.map((item: any) => ({
+          id: item.id,
+          name: item.name,
+          symbol: item.symbol,
+          image: item.image,
+          current_price: item.current_price,
+          price_change_percentage_24h: item.price_change_percentage_24h,
+          market_cap: item.market_cap,
+          total_volume: item.total_volume,
+          sparkline_in_7d: item.sparkline_in_7d,
+        }));
+
+        setCryptos(mappedData);
         setError(null);
       } catch (err) {
         setError('Failed to fetch cryptocurrency data');
@@ -139,10 +168,10 @@ export const useCryptoPrices = () => {
     };
 
     fetchData();
-    
+
     // Refresh data every 60 seconds
     const intervalId = setInterval(fetchData, 60000);
-    
+
     return () => clearInterval(intervalId);
   }, []);
 
@@ -151,6 +180,7 @@ export const useCryptoPrices = () => {
 
 export const useCryptoNews = () => {
   const [news, setNews] = useState<CryptoNews[]>(mockNews);
+  const [sentimentSummary, setSentimentSummary] = useState<{ score: number, sentiment: string } | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -158,12 +188,14 @@ export const useCryptoNews = () => {
     const fetchNews = async () => {
       setLoading(true);
       try {
-        // In a real app, this would fetch from a news API
-        // Simulate loading
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        
-        // Use mock data
-        setNews(mockNews);
+        const response = await fetch('http://127.0.0.1:3000/api/news');
+        if (!response.ok) {
+          throw new Error(`Failed to fetch news: ${response.statusText}`);
+        }
+        const data = await response.json();
+
+        setNews(data.news || data); // handle both old and new format for safety
+        if (data.summary) setSentimentSummary(data.summary);
         setError(null);
       } catch (err) {
         setError('Failed to fetch news');
@@ -176,7 +208,7 @@ export const useCryptoNews = () => {
     fetchNews();
   }, []);
 
-  return { news, loading, error };
+  return { news, sentimentSummary, loading, error };
 };
 
 export const convertCrypto = (amount: number, fromCurrency: string, toCurrency: string, cryptos: Cryptocurrency[]) => {
@@ -185,43 +217,43 @@ export const convertCrypto = (amount: number, fromCurrency: string, toCurrency: 
 
   const fromIsCrypto = !Object.keys(exchangeRates).includes(fromCurrency);
   const toIsCrypto = !Object.keys(exchangeRates).includes(toCurrency);
-  
+
   // Both are cryptocurrencies
   if (fromIsCrypto && toIsCrypto) {
-    const fromCrypto = cryptos.find(c => c.symbol === fromCurrency);
-    const toCrypto = cryptos.find(c => c.symbol === toCurrency);
-    
+    const fromCrypto = cryptos.find(c => c.symbol.toUpperCase() === fromCurrency.toUpperCase());
+    const toCrypto = cryptos.find(c => c.symbol.toUpperCase() === toCurrency.toUpperCase());
+
     if (!fromCrypto || !toCrypto) return 0;
-    
+
     // Convert via USD
     return amount * (fromCrypto.current_price / toCrypto.current_price);
   }
-  
+
   // From crypto to fiat
   if (fromIsCrypto && !toIsCrypto) {
-    const fromCrypto = cryptos.find(c => c.symbol === fromCurrency);
+    const fromCrypto = cryptos.find(c => c.symbol.toUpperCase() === fromCurrency.toUpperCase());
     if (!fromCrypto) return 0;
-    
+
     // Convert to USD first, then to target currency
     const valueInUsd = amount * fromCrypto.current_price;
     return valueInUsd * exchangeRates[toCurrency as keyof typeof exchangeRates];
   }
-  
+
   // From fiat to crypto
   if (!fromIsCrypto && toIsCrypto) {
-    const toCrypto = cryptos.find(c => c.symbol === toCurrency);
+    const toCrypto = cryptos.find(c => c.symbol.toUpperCase() === toCurrency.toUpperCase());
     if (!toCrypto) return 0;
-    
+
     // Convert to USD first, then to crypto
     const valueInUsd = amount / exchangeRates[fromCurrency as keyof typeof exchangeRates];
     return valueInUsd / toCrypto.current_price;
   }
-  
+
   // Both are fiat currencies
   const fromRate = exchangeRates[fromCurrency as keyof typeof exchangeRates];
   const toRate = exchangeRates[toCurrency as keyof typeof exchangeRates];
-  
+
   if (!fromRate || !toRate) return 0;
-  
+
   return amount * (1 / fromRate) * toRate;
 };
