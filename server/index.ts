@@ -7,10 +7,7 @@ import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
 import authRoutes from './routes/auth';
 import path from 'path';
-// import { fileURLToPath } from 'url'; // This import is no longer needed
-
-// const __filename = fileURLToPath(import.meta.url); // This line is removed
-// const __dirname = path.dirname(__filename); // This line is removed
+import { fileURLToPath } from 'url';
 
 const prisma = new PrismaClient();
 const app = express();
@@ -18,7 +15,8 @@ const PORT = process.env.PORT || 3000;
 const JWT_SECRET: string = process.env.JWT_SECRET || 'fallback_secret_for_dev';
 
 // Setup __dirname for ES Modules
-const __dirname = path.resolve();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // ─── Auth Middleware ────────────────────────────────────────────────────────
 interface AuthRequest extends Request { userId?: string; }
@@ -29,8 +27,11 @@ const verifyToken = (req: AuthRequest, res: Response, next: NextFunction) => {
         return res.status(401).json({ error: 'No token provided. Please log in.' });
     }
     const token = authHeader.split(' ')[1];
+    if (!token) {
+        return res.status(401).json({ error: 'Invalid token format.' });
+    }
     try {
-        const decoded = jwt.verify(token, JWT_SECRET as string) as any;
+        const decoded = jwt.verify(token, JWT_SECRET) as any;
         req.userId = decoded.id;
         next();
     } catch {
