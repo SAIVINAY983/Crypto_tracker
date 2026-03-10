@@ -52,7 +52,7 @@ const frontendDistPath = path.resolve(__dirname, process.env.NODE_ENV === 'produ
 app.use(express.static(frontendDistPath));
 
 // Handle React routing, return all requests to React app
-app.get('*', (req, res, next) => {
+app.get('(.*)', (req, res, next) => {
     if (req.path.startsWith('/api')) {
         return next();
     }
