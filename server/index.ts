@@ -53,7 +53,7 @@ mongoose.connect(MONGO_URI)
 app.use('/api/auth', authRoutes);
 
 // Serve static files from the React app
-const frontendDistPath = path.join(__dirname, '../dist');
+const frontendDistPath = path.resolve(__dirname, process.env.NODE_ENV === 'production' ? '../../dist' : '../dist');
 app.use(express.static(frontendDistPath));
 
 // Handle React routing, return all requests to React app
