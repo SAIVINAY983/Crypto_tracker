@@ -40,6 +40,8 @@ const Login = () => {
     // Extra client-side safety guard
     const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
+import { API_BASE_URL } from '../utils/apiConfig';
+
     const onSubmit = async (data: LoginFormValues) => {
         // Hard guard: reject bad email even if Zod somehow passed it
         if (!EMAIL_REGEX.test(data.email)) {
@@ -48,7 +50,7 @@ const Login = () => {
         }
         setIsLoading(true);
         try {
-            const response = await fetch('http://localhost:3000/api/auth/login', {
+            const response = await fetch(`${API_BASE_URL}/auth/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
