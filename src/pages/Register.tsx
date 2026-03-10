@@ -49,7 +49,7 @@ const Register = () => {
     const onSubmit = async (data: RegisterFormValues) => {
         setIsLoading(true);
         try {
-            const response = await fetch(`${API_BASE_URL}/auth/register`, {
+            const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email: data.email, phone: data.phone, password: data.password })
