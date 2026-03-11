@@ -105,27 +105,31 @@ const fallbackData = [
 
 // Proxy CoinGecko API to avoid CORS and caching limits locally
 apiRouter.get('/cryptos', async (req, res) => {
+    console.log('[API] GET /cryptos - Fetching market data');
     try {
         const now = Date.now();
         if (cryptoCache && (now - lastFetchTime < CACHE_DURATION)) {
+            console.log('[API] Serving cryptos from cache');
             return res.json(cryptoCache);
         }
 
         const response = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=20&page=1&sparkline=true');
         if (!response.ok) {
+            console.error(`[API] CoinGecko Error: ${response.status} ${response.statusText}`);
             throw new Error(`CoinGecko API returned ${response.status}`);
         }
         const data = await response.json();
         cryptoCache = data;
         lastFetchTime = now;
+        console.log(`[API] Successfully fetched ${data.length} cryptos from CoinGecko`);
         res.json(data);
     } catch (error) {
-        console.error('Error fetching cryptos from CoinGecko:', error);
+        console.error('[API] Crypto Fetch Exception:', error);
         if (cryptoCache) {
-            console.log('Serving from stale cache');
+            console.log('[API] Serving from stale cache');
             res.json(cryptoCache);
         } else {
-            console.log('Serving fallback data due to rate limits');
+            console.log('[API] Serving fallback data');
             res.json(fallbackData);
         }
     }
@@ -230,27 +234,33 @@ async function getOrCreatePaperAccount(userId: string) {
 
 // ─── Portfolio Routes (Protected) ─────────────────────────────────────────
 apiRouter.get('/portfolio', verifyToken, async (req: AuthRequest, res) => {
+    const userId = req.userId!;
+    console.log(`[Portfolio] GET request for User: ${userId}`);
     try {
-        const userId = req.userId!;
         const portfolio = await prisma.portfolioItem.findMany({
             where: { userId },
             include: { transactions: { orderBy: { createdAt: 'desc' } } }
         });
         const account = await getOrCreatePaperAccount(userId);
+        console.log(`[Portfolio] Found ${portfolio.length} items and balance: ${account.cashBalance}`);
         res.json({ portfolio, balance: account.cashBalance });
     } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch portfolio' });
+        console.error('[Portfolio] Database Error:', error);
+        res.status(500).json({ error: 'Failed to fetch portfolio data from database' });
     }
 });
 
 apiRouter.get('/portfolio/history', verifyToken, async (req: AuthRequest, res) => {
+    console.log(`[History] GET request for User: ${req.userId}`);
     try {
         const snapshots = await prisma.portfolioSnapshot.findMany({
             where: { userId: req.userId! },
             orderBy: { timestamp: 'asc' }
         });
+        console.log(`[History] Found ${snapshots.length} snapshots`);
         res.json(snapshots);
     } catch (error) {
+        console.error('[History] Database Error:', error);
         res.status(500).json({ error: 'Failed to fetch history' });
     }
 });
