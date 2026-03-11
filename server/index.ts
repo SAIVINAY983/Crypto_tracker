@@ -38,14 +38,17 @@ const verifyToken = (req: AuthRequest, res: Response, next: NextFunction) => {
 app.use(cors());
 app.use(express.json());
 
-// Connect to MongoDB for Authentication
-const MONGO_URI = process.env.MONGO_URI || process.env.DATABASE_URL || 'mongodb://127.0.0.1:27017/crypto-pal';
-mongoose.connect(MONGO_URI)
-    .then(() => console.log('✅ Connected to MongoDB (Auth DB)'))
-    .catch((err) => console.error('❌ MongoDB Connection Error:', err));
+// Global Request Logger for Debugging
+app.use((req, res, next) => {
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
+    next();
+});
 
-// Health Check Route
-app.get('/api/health', (req, res) => {
+// Create API Router
+const apiRouter = express.Router();
+
+// Health Check
+apiRouter.get('/health', (req, res) => {
     const mongoStatus = mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected';
     res.json({
         status: 'Server is running',
@@ -55,8 +58,17 @@ app.get('/api/health', (req, res) => {
     });
 });
 
-// Register Auth Routes
-app.use('/api/auth', authRoutes);
+// Auth Routes
+apiRouter.use('/auth', authRoutes);
+
+// Register API Router
+app.use('/api', apiRouter);
+
+// Connect to MongoDB for Authentication
+const MONGO_URI = process.env.MONGO_URI || process.env.DATABASE_URL || 'mongodb://127.0.0.1:27017/crypto-pal';
+mongoose.connect(MONGO_URI)
+    .then(() => console.log('✅ Connected to MongoDB (Auth DB)'))
+    .catch((err) => console.error('❌ MongoDB Connection Error:', err));
 
 // Serve static files from the React app
 const frontendDistPath = path.resolve(__dirname, process.env.NODE_ENV === 'production' ? '../../dist' : '../dist');
@@ -92,7 +104,7 @@ const fallbackData = [
 ];
 
 // Proxy CoinGecko API to avoid CORS and caching limits locally
-app.get('/api/cryptos', async (req, res) => {
+apiRouter.get('/cryptos', async (req, res) => {
     try {
         const now = Date.now();
         if (cryptoCache && (now - lastFetchTime < CACHE_DURATION)) {
@@ -147,7 +159,7 @@ import Sentiment from 'sentiment';
 const sentimentAnalyzer = new Sentiment();
 
 // Live News API Route
-app.get('/api/news', async (req, res) => {
+apiRouter.get('/news', async (req, res) => {
     try {
         const now = Date.now();
         if (newsCache && (now - lastNewsFetchTime < NEWS_CACHE_DURATION)) {
@@ -217,7 +229,7 @@ async function getOrCreatePaperAccount(userId: string) {
 }
 
 // ─── Portfolio Routes (Protected) ─────────────────────────────────────────
-app.get('/api/portfolio', verifyToken, async (req: AuthRequest, res) => {
+apiRouter.get('/portfolio', verifyToken, async (req: AuthRequest, res) => {
     try {
         const userId = req.userId!;
         const portfolio = await prisma.portfolioItem.findMany({
@@ -231,7 +243,7 @@ app.get('/api/portfolio', verifyToken, async (req: AuthRequest, res) => {
     }
 });
 
-app.get('/api/portfolio/history', verifyToken, async (req: AuthRequest, res) => {
+apiRouter.get('/portfolio/history', verifyToken, async (req: AuthRequest, res) => {
     try {
         const snapshots = await prisma.portfolioSnapshot.findMany({
             where: { userId: req.userId! },
@@ -243,7 +255,7 @@ app.get('/api/portfolio/history', verifyToken, async (req: AuthRequest, res) => 
     }
 });
 
-app.post('/api/portfolio/snapshot', verifyToken, async (req: AuthRequest, res) => {
+apiRouter.post('/portfolio/snapshot', verifyToken, async (req: AuthRequest, res) => {
     const { totalValue } = req.body;
     try {
         const snapshot = await prisma.portfolioSnapshot.create({
@@ -255,7 +267,7 @@ app.post('/api/portfolio/snapshot', verifyToken, async (req: AuthRequest, res) =
     }
 });
 
-app.post('/api/portfolio/buy', verifyToken, async (req: AuthRequest, res) => {
+apiRouter.post('/portfolio/buy', verifyToken, async (req: AuthRequest, res) => {
     const { cryptoId, symbol, amount, currentPrice } = req.body;
     const userId = req.userId!;
     try {
@@ -303,7 +315,7 @@ app.post('/api/portfolio/buy', verifyToken, async (req: AuthRequest, res) => {
     }
 });
 
-app.post('/api/portfolio/sell', verifyToken, async (req: AuthRequest, res) => {
+apiRouter.post('/portfolio/sell', verifyToken, async (req: AuthRequest, res) => {
     const { cryptoId, amount, currentPrice } = req.body;
     const userId = req.userId!;
     try {
@@ -346,14 +358,14 @@ app.post('/api/portfolio/sell', verifyToken, async (req: AuthRequest, res) => {
 });
 
 // ─── Watchlist Routes (Protected) ──────────────────────────────────────────
-app.get('/api/watchlist', verifyToken, async (req: AuthRequest, res) => {
+apiRouter.get('/watchlist', verifyToken, async (req: AuthRequest, res) => {
     try {
         const items = await prisma.watchlistItem.findMany({ where: { userId: req.userId! } });
         res.json(items);
     } catch { res.status(500).json({ error: 'Failed to fetch watchlist' }); }
 });
 
-app.post('/api/watchlist', verifyToken, async (req: AuthRequest, res) => {
+apiRouter.post('/watchlist', verifyToken, async (req: AuthRequest, res) => {
     const { cryptoId } = req.body;
     try {
         const item = await prisma.watchlistItem.upsert({
@@ -365,7 +377,7 @@ app.post('/api/watchlist', verifyToken, async (req: AuthRequest, res) => {
     } catch { res.status(500).json({ error: 'Failed to add to watchlist' }); }
 });
 
-app.delete('/api/watchlist/:cryptoId', verifyToken, async (req: AuthRequest, res) => {
+apiRouter.delete('/watchlist/:cryptoId', verifyToken, async (req: AuthRequest, res) => {
     try {
         await prisma.watchlistItem.deleteMany({ where: { userId: req.userId!, cryptoId: req.params.cryptoId as string } });
         res.json({ success: true });
@@ -373,7 +385,7 @@ app.delete('/api/watchlist/:cryptoId', verifyToken, async (req: AuthRequest, res
 });
 
 // ─── Price Alert Routes (Protected) ────────────────────────────────────────
-app.get('/api/alerts', verifyToken, async (req: AuthRequest, res) => {
+apiRouter.get('/alerts', verifyToken, async (req: AuthRequest, res) => {
     try {
         const alerts = await prisma.priceAlert.findMany({
             where: { userId: req.userId! },
@@ -383,7 +395,7 @@ app.get('/api/alerts', verifyToken, async (req: AuthRequest, res) => {
     } catch { res.status(500).json({ error: 'Failed to fetch alerts' }); }
 });
 
-app.post('/api/alerts', verifyToken, async (req: AuthRequest, res) => {
+apiRouter.post('/alerts', verifyToken, async (req: AuthRequest, res) => {
     const { cryptoId, symbol, targetPrice, direction } = req.body;
     if (!cryptoId || !targetPrice || !direction) {
         return res.status(400).json({ error: 'cryptoId, targetPrice, and direction are required.' });
@@ -396,7 +408,7 @@ app.post('/api/alerts', verifyToken, async (req: AuthRequest, res) => {
     } catch { res.status(500).json({ error: 'Failed to create alert' }); }
 });
 
-app.delete('/api/alerts/:id', verifyToken, async (req: AuthRequest, res) => {
+apiRouter.delete('/alerts/:id', verifyToken, async (req: AuthRequest, res) => {
     try {
         await prisma.priceAlert.deleteMany({ where: { id: req.params.id as string, userId: req.userId! } });
         res.json({ success: true });
