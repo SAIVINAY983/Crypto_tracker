@@ -44,6 +44,17 @@ mongoose.connect(MONGO_URI)
     .then(() => console.log('✅ Connected to MongoDB (Auth DB)'))
     .catch((err) => console.error('❌ MongoDB Connection Error:', err));
 
+// Health Check Route
+app.get('/api/health', (req, res) => {
+    const mongoStatus = mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected';
+    res.json({
+        status: 'Server is running',
+        environment: process.env.NODE_ENV || 'development',
+        mongodb: mongoStatus,
+        timestamp: new Date().toISOString()
+    });
+});
+
 // Register Auth Routes
 app.use('/api/auth', authRoutes);
 
