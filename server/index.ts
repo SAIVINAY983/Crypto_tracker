@@ -9,6 +9,7 @@ import authRoutes from './routes/auth';
 import path from 'path';
 const prisma = new PrismaClient();
 const app = express();
+export { app };
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET: string = process.env.JWT_SECRET || 'fallback_secret_for_dev';
 
@@ -458,6 +459,8 @@ const checkPriceAlerts = async () => {
 // Check alerts every 60 seconds
 setInterval(checkPriceAlerts, 60 * 1000);
 
-app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
-});
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+    app.listen(PORT, () => {
+        console.log(`Server is running on http://localhost:${PORT}`);
+    });
+}
